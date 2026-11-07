@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Harry & Ruby's Wedding Invitation | 洪敬翰 x 陳怡安</title>
     
+    <!-- 最高優先級預載本機 DeluxeEdition 字型檔，確保網頁開啟第一時間即載入 -->
+    <link rel="preload" href="DeluxeEdition.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="DeluxeEdition.ttf" as="font" type="font/ttf" crossorigin>
+
     <!-- Google Fonts: Cormorant Garamond & Noto Serif TC -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,14 +54,14 @@
 
     <!-- Custom CSS for specific aesthetic enhancements -->
     <style>
-        /* 支援如果使用者本機有放置 Deluxe Edition 字型檔 (.woff2 或 .ttf)，加入 swap 避免文字隱形延遲 */
+        /* 支援本機 Deluxe Edition 字型檔，使用 block 確保不閃現預設字體 */
         @font-face {
             font-family: 'Deluxe Edition';
             src: url('DeluxeEdition.woff2') format('woff2'),
                  url('DeluxeEdition.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
-            font-display: swap;
+            font-display: block;
         }
 
         body {
@@ -72,7 +76,16 @@
         }
 
         .font-deluxe {
-            font-family: 'Alex Brush', 'Caveat', 'Deluxe Edition', cursive;
+            font-family: 'Deluxe Edition', 'Alex Brush', 'Caveat', cursive;
+        }
+
+        /* 字型載入完成前的平滑過渡，避免字體跳動 */
+        .welcome-content-reveal {
+            opacity: 0;
+            transition: opacity 0.35s ease-out;
+        }
+        .fonts-loaded .welcome-content-reveal {
+            opacity: 1;
         }
 
         /* Smooth Glassmorphism Header */
@@ -153,7 +166,7 @@
 
     <!-- 1. 開場歡迎儀式遮罩 (Welcome Overlay) -->
     <div id="welcome-overlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bglight px-6 text-center shadow-2xl">
-        <div class="max-w-md w-full border border-primary/20 p-8 md:p-12 rounded-2xl bg-white/50 backdrop-blur-sm flex flex-col items-center relative overflow-hidden">
+        <div class="welcome-content-reveal max-w-md w-full border border-primary/20 p-8 md:p-12 rounded-2xl bg-white/50 backdrop-blur-sm flex flex-col items-center relative overflow-hidden">
             
             <!-- 頂部菱形與標題三行垂直對齊中心 -->
             <div class="flex flex-col items-center justify-center w-full mb-4">
@@ -628,6 +641,22 @@
     <script>
         let isMusicPlaying = false;
         let hasAlreadySubmitted = false; // 記錄賓客是否已成功送出過回函
+
+        // 監聽字型載入狀態，確保 DeluxeEdition 準備就緒後立即優雅呈現（並設 400ms 安全超時防止久候）
+        (function initFontReveal() {
+            const overlay = document.getElementById('welcome-overlay');
+            const reveal = () => {
+                if (overlay) overlay.classList.add('fonts-loaded');
+            };
+            if (document.fonts && document.fonts.load) {
+                Promise.race([
+                    document.fonts.load('1em "Deluxe Edition"'),
+                    new Promise(resolve => setTimeout(resolve, 400))
+                ]).then(reveal).catch(reveal);
+            } else {
+                reveal();
+            }
+        })();
 
         // 開場開啟邀請函
         function openInvitation() {
